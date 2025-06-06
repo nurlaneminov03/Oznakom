@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ctype.h>
+#include <stdio.h>
 
 #define SERVER_PORT 8080
 #define BUFFER_SIZE 2048
