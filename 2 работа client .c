@@ -2,45 +2,46 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define SERVER_IP "127.0.0.1"
-#define PORT 8080
+#define PORT 8080  // Порт для подключения
 
 int main() {
-    int sock_fd;
-    struct sockaddr_in server_addr;
-    char message[] = "Эминов Нурлан Шахин оглы ККСО-26-24 1 курс";
-
-    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock_fd == -1) {
-        perror("Ошибка при создании сокета");
+    int sock;  // Дескриптор сокета
+    struct sockaddr_in serv_addr;  // Структура адреса сервера
+    
+    // Создание сокета
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("Ошибка создания сокета");
         exit(EXIT_FAILURE);
     }
 
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    if (inet_pton(AF_INET, SERVER_IP, &server_addr.sin_addr) <= 0) {
-        perror("Неверный адрес");
-        close(sock_fd);
+    // Настройка адреса сервера
+    serv_addr.sin_family = AF_INET;  // Семейство адресов IPv4
+    serv_addr.sin_port = htons(PORT);  // Порт сервера
+    
+    // Преобразование IP-адреса
+    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
+        perror("Ошибка в IP-адресе");
+        close(sock);
         exit(EXIT_FAILURE);
     }
 
-    if (connect(sock_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Ошибка при подключении");
-        close(sock_fd);
+    // Подключение к серверу
+    if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Ошибка подключения");
+        close(sock);
         exit(EXIT_FAILURE);
     }
 
-    if (send(sock_fd, message, strlen(message), 0) < 0) {
-        perror("Ошибка при отправке сообщения");
-        close(sock_fd);
-        exit(EXIT_FAILURE);
-    }
+    // Отправка данных серверу
+    char* message = "Эминов Нурлан Шахин оглы ККСО-26-24 1 курс";
+    send(sock, message, strlen(message), 0);
+    printf("Сообщение отправлено\n");
 
-    printf("Сообщение отправлено серверу: %s\n", message);
-
-    close(sock_fd);
-
+    // Закрытие соединения
+    close(sock);
     return 0;
 }
